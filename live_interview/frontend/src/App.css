@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;600;700;800&display=swap');
+
 * {
   margin: 0;
   padding: 0;
@@ -10,8 +12,7 @@ html, body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -29,7 +30,7 @@ body {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-/* Navigation */
+/* ========== NAVIGATION ========== */
 .navbar {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
@@ -41,6 +42,8 @@ body {
 
 .nav-container {
   width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
   padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
@@ -87,19 +90,15 @@ body {
   color: white;
 }
 
-/* Main Content */
-.main-content {
-  flex: 1;
-  width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
+/* ========== MAIN CONTENT ========== */
 .page-container {
   width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
   padding: 3rem 2rem;
 }
 
-/* Hero Section */
+/* ========== HOME PAGE ========== */
 .hero-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -154,35 +153,25 @@ body {
 .floating-card {
   position: absolute;
   background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 24px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+
+  width: 170px;
+  height: 160px;
+
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;   /* 👈 centers horizontally & vertically */
+  flex-direction: column;
   gap: 0.5rem;
+
   animation: float 3s ease-in-out infinite;
 }
 
-.floating-card:nth-child(1) {
-  top: 50px;
-  left: 50px;
-}
-
-.floating-card:nth-child(2) {
-  top: 150px;
-  right: 50px;
-  animation-delay: 1s;
-}
-
-.floating-card:nth-child(3) {
-  bottom: 50px;
-  left: 100px;
-  animation-delay: 2s;
-}
 
 .card-icon {
-  font-size: 2.5rem;
+  font-size: 8rem;
 }
 
 @keyframes float {
@@ -208,7 +197,7 @@ body {
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 2rem;
 }
 
@@ -220,8 +209,9 @@ body {
 }
 
 .feature-card:hover {
-  transform: translateY(-5px);
-  background: #f7fafc;
+  transform: translateY(-10px);
+  background: #edf2f7;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); 
 }
 
 .feature-icon {
@@ -240,9 +230,11 @@ body {
   line-height: 1.6;
 }
 
-/* Setup Container */
+/* ========== SETUP PAGE ========== */
 .setup-container {
   width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
   padding: 0 2rem;
 }
 
@@ -250,6 +242,7 @@ body {
   color: white;
   font-size: 3rem;
   text-align: center;
+  margin-top: 2rem;        /* 👈 moves heading down */
   margin-bottom: 3rem;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
@@ -325,6 +318,8 @@ body {
 .upload-icon,
 .file-icon {
   font-size: 3rem;
+  color: #38a169;        /* ✅ nice green */
+  font-weight: 800;
 }
 
 /* Buttons */
@@ -400,15 +395,22 @@ body {
 .select-input {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #c3b8f3;
   border-radius: 10px;
   font-size: 1rem;
+  font-family: inherit;
+  background: #f3f0ff;        /* 💜 light purple */
+  color: #2d3748;
   transition: all 0.3s ease;
+  appearance: none;           /* removes default OS styling */
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .select-input:focus {
   outline: none;
   border-color: #667eea;
+  background: #ede9fe;
 }
 
 /* Questions List */
@@ -439,11 +441,11 @@ body {
   line-height: 1.6;
 }
 
-/* Interview Container */
+/* ========== INTERVIEW PAGE ========== */
 .interview-container {
-  width: 100vw;
-  max-width: 100vw;
-  margin: 0;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
   padding: 2rem;
 }
 
@@ -481,6 +483,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #000;
 }
 
 .video-feed {
@@ -488,7 +491,6 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
-  background: #000;
   min-height: 500px;
 }
 
@@ -574,17 +576,6 @@ body {
 .mic-button.start:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(72, 187, 120, 0.6);
-}
-
-.mic-button.stop {
-  background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(245, 101, 101, 0.4);
-}
-
-.mic-button.stop:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(245, 101, 101, 0.6);
 }
 
 .mic-icon {
@@ -704,11 +695,11 @@ body {
   box-shadow: 0 6px 20px rgba(246, 173, 85, 0.6);
 }
 
-/* Contact Page */
+/* ========== CONTACT PAGE ========== */
 .contact-container {
-  width: 100vw;
-  max-width: 100vw;
-  margin: 0;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 0 2rem;
 }
 
@@ -761,24 +752,27 @@ body {
 .form-input,
 .form-textarea {
   padding: 0.75rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid #c3b8f3;
   border-radius: 10px;
   font-size: 1rem;
   font-family: inherit;
   transition: all 0.3s ease;
+  background: #f3f0ff;          /* 💜 light purple */
+  color: #2d3748;
 }
 
 .form-input:focus,
 .form-textarea:focus {
   outline: none;
   border-color: #667eea;
+  background: #ede9fe;
 }
 
 .form-textarea {
   resize: vertical;
 }
 
-/* Footer */
+/* ========== FOOTER ========== */
 .footer {
   background: rgba(0, 0, 0, 0.3);
   color: white;
@@ -787,7 +781,7 @@ body {
   margin-top: auto;
 }
 
-/* Responsive Design */
+/* ========== RESPONSIVE DESIGN ========== */
 @media (max-width: 968px) {
   .hero-section {
     grid-template-columns: 1fr;
@@ -806,8 +800,12 @@ body {
   }
 
   .nav-links {
-    flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .nav-link {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
   }
 
   .hero-title {
@@ -834,5 +832,17 @@ body {
 
   .page-title {
     font-size: 2rem;
+  }
+
+  .nav-container {
+    padding: 1rem;
+  }
+
+  .logo {
+    font-size: 1.2rem;
+  }
+
+  .logo-icon {
+    font-size: 1.5rem;
   }
 }
