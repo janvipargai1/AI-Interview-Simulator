@@ -22,6 +22,7 @@ function App() {
   const recordedChunksRef = useRef([]);
   const [recordings, setRecordings] = useState({}); // { questionIndex: blob }
   const [currentAudioURL, setCurrentAudioURL] = useState(null);
+  const [answersText, setAnswersText] = useState({}); // { questionIndex: "transcribed text" }
 
 
 
@@ -89,7 +90,20 @@ function App() {
 
   const startMic = async () => {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    recordedChunksRef.current = [];
+
+setAnswersText((prev) => ({
+  ...prev,
+  [qIndex]: "",
+}));
+    const stream = await navigator.mediaDevices.getUserMedia({
+  audio: {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+  },
+});
     setAudioStream(stream);
     setMicOn(true);
 
@@ -102,18 +116,21 @@ function App() {
     };
 
     mediaRecorder.onstop = () => {
-      const blob = new Blob(recordedChunksRef.current, { type: "audio/webm" });
+  const blob = new Blob(recordedChunksRef.current, { type: "audio/webm" });
 
-      // Save per question
-      setRecordings((prev) => ({
-        ...prev,
-        [qIndex]: blob,
-      }));
+  // Save per question
+  setRecordings((prev) => ({
+    ...prev,
+    [qIndex]: blob,
+  }));
 
-      // For demo playback
-      const url = URL.createObjectURL(blob);
-      setCurrentAudioURL(url);
-    };
+  // For demo playback
+  const url = URL.createObjectURL(blob);
+  setCurrentAudioURL(url);
+
+  // 🔥 Send to backend for speech-to-text
+  sendForTranscription(blob, qIndex);
+};
 
     mediaRecorder.start(); // 🎤 START RECORDING NOW
 
@@ -165,7 +182,33 @@ function App() {
   setMicOn(false);
 };
 
+const handleContactSubmit = (e) => {
+  e.preventDefault();
+  setMessageSent(true);
+};
 
+const sendForTranscription = async (blob, questionIndex) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", blob, "answer.webm");
+
+    const res = await fetch("http://localhost:8000/transcribe", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+    console.log("Transcribed text:", data.text);
+
+    // Save text per question
+    setAnswersText((prev) => ({
+      ...prev,
+      [questionIndex]: data.text,
+    }));
+  } catch (err) {
+    console.error("Transcription error:", err);
+  }
+};
 
 
   // -------- Test Record (5 sec) --------
@@ -549,6 +592,20 @@ function App() {
               <div className="question-card">
                 <h3>Current Question</h3>
                 <p className="question-text">{questions[qIndex]}</p>
+                {answersText[qIndex] && (
+  <div
+    style={{
+      marginTop: "1rem",
+      padding: "1rem",
+      background: "#f7fafc",
+      borderRadius: "8px",
+      color: "#000",   // 👈 add this
+    }}
+  >
+    <strong>Your Answer (Text):</strong>
+    <p>{answersText[qIndex]}</p>
+  </div>
+)}
               </div>
 
               <div className="controls-section">
@@ -631,4 +688,3 @@ function App() {
 }
 
 export default App;
-
