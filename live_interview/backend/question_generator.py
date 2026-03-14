@@ -95,3 +95,41 @@ GLOBAL RULES:
     # Hard guarantee count
     return questions[:num_questions]
 
+# ---------------- ANSWER EVALUATION ----------------
+def evaluate_answer(question, answer):
+
+    prompt = f"""
+You are a strict technical interviewer.
+
+Question:
+{question}
+
+Candidate Answer:
+{answer}
+
+Evaluate the answer and respond ONLY in JSON format:
+
+{{
+ "score": number from 0-10,
+ "strengths": "what the candidate did well",
+ "weaknesses": "what they missed",
+ "improvement": "how they could improve"
+}}
+"""
+
+    try:
+        response = client.models.generate_content(
+            model="models/gemini-flash-latest",
+            contents=prompt
+        )
+
+        return response.text
+
+    except Exception as e:
+        print("Gemini error:", e)
+        return {
+            "score": 0,
+            "strengths": "",
+            "weaknesses": "",
+            "improvement": "AI evaluation temporarily unavailable"
+        }
