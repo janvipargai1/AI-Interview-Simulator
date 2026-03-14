@@ -4,11 +4,15 @@ import tempfile
 import os
 from dotenv import load_dotenv
 import whisper
+from google import genai
+from voice_analysis import analyze_voice
 
 load_dotenv()
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 from resume_parser import extract_text_from_resume, extract_skills, extract_experience
 from question_generator import generate_questions
+from question_generator import evaluate_answer
 
 app = FastAPI()
 
@@ -27,6 +31,8 @@ print("Whisper model loaded.")
 
 # Store questions in memory for now
 QUESTIONS = []
+ANSWERS = {}
+EVALUATIONS = {}
 
 @app.get("/")
 def root():
@@ -81,9 +87,14 @@ def get_questions():
     return {"questions": QUESTIONS}
 
 # -------- Speech to Text (Whisper) --------
+from fastapi import Form
+
 @app.post("/transcribe")
-async def transcribe_audio(file: UploadFile = File(...)):
-    # Save uploaded audio temporarily
+async def transcribe_audio(
+    index: int = Form(...),
+    file: UploadFile = File(...)
+):
+
     with tempfile.NamedTemporaryFile(delete=False, suffix=".webm") as tmp:
         audio_bytes = await file.read()
         tmp.write(audio_bytes)
@@ -91,15 +102,80 @@ async def transcribe_audio(file: UploadFile = File(...)):
 
     try:
         print("Transcribing audio:", temp_audio_path)
+
         result = whisper_model.transcribe(temp_audio_path)
-        text = result.get("text", "")
+        text = result.get("text", "").strip()
+        voice_metrics = analyze_voice(text)
+
         print("Transcription:", text)
+
+        # Save answer for that question
+        ANSWERS[str(index)] = text
+
     except Exception as e:
         print("Transcription error:", e)
-        return {"text": "", "error": str(e)}
+        return {"answer": "", "error": str(e)}
+
     finally:
-        # Cleanup temp file
         if os.path.exists(temp_audio_path):
             os.remove(temp_audio_path)
 
-    return {"text": text}
+    return {
+        "index": index,
+        "answer": text,
+        "voice_analysis": voice_metrics
+    }
+
+@app.post("/evaluate_answer")
+def evaluate_answer_api(data: dict = Body(...)):
+
+    question_index = data.get("index")
+    question = data.get("question")
+    answer = data.get("answer")
+
+    if question is None or answer is None:
+        return {"error": "Question and answer required"}
+
+    result = evaluate_answer(question, answer)
+
+    ANSWERS[str(question_index)] = answer
+    EVALUATIONS[str(question_index)] = result
+
+    return {"evaluation": result}
+
+@app.get("/final_report")
+def generate_final_report():
+
+    total_score = 0
+    strengths = []
+    weaknesses = []
+
+    detailed = []
+
+    for i, q in enumerate(QUESTIONS):
+
+        eval_data = EVALUATIONS.get(str(i), {})
+        score = eval_data.get("score", 0)
+
+        total_score += score
+
+        strengths.extend(eval_data.get("strengths", []))
+        weaknesses.extend(eval_data.get("weaknesses", []))
+
+        detailed.append({
+            "question": q,
+            "answer": ANSWERS.get(str(i), ""),
+            "evaluation": eval_data
+        })
+
+    if len(QUESTIONS) > 0:
+        technical_score = round(total_score / len(QUESTIONS), 2)
+    else:
+        technical_score = 0
+
+    return {
+        "technical_score": technical_score,
+        "strengths": list(set(strengths)),
+        "weaknesses": list(set(weaknesses)),
+        "detailed_analysis": detailed
+    }
