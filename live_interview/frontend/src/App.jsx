@@ -23,6 +23,7 @@ function App() {
   const [recordings, setRecordings] = useState({}); // { questionIndex: blob }
   const [currentAudioURL, setCurrentAudioURL] = useState(null);
   const [answersText, setAnswersText] = useState({}); // { questionIndex: "transcribed text" }
+  const [report, setReport] = useState(null);
 
 
 
@@ -189,26 +190,97 @@ const handleContactSubmit = (e) => {
 
 const sendForTranscription = async (blob, questionIndex) => {
   try {
-    const formData = new FormData();
-    formData.append("file", blob, "answer.webm");
 
-    const res = await fetch("http://localhost:8000/transcribe", {
+    const formData = new FormData();
+    formData.append("file", blob);
+    formData.append("index", questionIndex);
+
+    // STEP 1: TRANSCRIBE
+    const transcribeRes = await fetch("http://localhost:8000/transcribe", {
       method: "POST",
-      body: formData,
+      body: formData
     });
 
-    const data = await res.json();
-    console.log("Transcribed text:", data.text);
+    const transcribeData = await transcribeRes.json();
 
-    // Save text per question
-    setAnswersText((prev) => ({
+    console.log("Transcription response:", transcribeData);
+
+    const answerText = transcribeData.answer || transcribeData.text;
+
+    if (!answerText) {
+      console.log("No transcription received");
+      return;
+    }
+
+    // STEP 2: Save text in UI
+    setAnswersText(prev => ({
       ...prev,
-      [questionIndex]: data.text,
+      [questionIndex]: answerText
     }));
+
+    // STEP 3: SEND FOR EVALUATION
+    const evalRes = await fetch("http://localhost:8000/evaluate_answer", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        index: questionIndex,
+        question: questions[questionIndex],
+        answer: answerText
+      })
+    });
+
+    const evalData = await evalRes.json();
+
+    console.log("Evaluation result:", evalData);
+
   } catch (err) {
-    console.error("Transcription error:", err);
+    console.error("Transcription/Evaluation error:", err);
   }
 };
+
+const evaluateAnswer = async (index, question, answer) => {
+
+  try {
+
+    const res = await fetch("http://localhost:8000/evaluate_answer", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        index: index,
+        question: question,
+        answer: answer
+      })
+    })
+
+    const data = await res.json()
+
+    console.log("Evaluation:", data)
+
+  } catch (err) {
+    console.error("Evaluation error:", err)
+  }
+}
+
+const evaluateInterview = async () => {
+
+  try {
+
+    const res = await fetch("http://localhost:8000/final_report")
+
+    const data = await res.json()
+
+    console.log("Final Report:", data)
+
+    setReport(JSON.stringify(data, null, 2))
+
+  } catch (err) {
+    console.error("Final report error:", err)
+  }
+}
 
 
   // -------- Test Record (5 sec) --------
@@ -671,10 +743,27 @@ const sendForTranscription = async (blob, questionIndex) => {
               </div>
 
               {qIndex === questions.length - 1 && (
-                <button className="finish-button">
+                <button className="finish-button"
+                  onClick={evaluateInterview}
+                  >
                   Finish Interview
                 </button>
               )}
+              {report && (
+  <div
+    style={{
+      marginTop: "2rem",
+      padding: "1.5rem",
+      background: "#ffffff",
+      color: "#000",
+      borderRadius: "10px",
+      border: "1px solid #ddd"
+    }}
+  >
+    <h2>Interview Report</h2>
+    <pre style={{whiteSpace:"pre-wrap"}}>{report}</pre>
+  </div>
+)}
             </div>
           </div>
         </div>
